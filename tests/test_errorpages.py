@@ -167,17 +167,14 @@ def test_route_error_response_from_auto_route(app):
     @app.get("/text")
     def text_response(request):
         raise Exception("oops")
-        return text("Never gonna see this")
 
     @app.get("/json")
     def json_response(request):
         raise Exception("oops")
-        return json({"message": "Never gonna see this"})
 
     @app.get("/html")
     def html_response(request):
         raise Exception("oops")
-        return html("<h1>Never gonna see this</h1>")
 
     _, response = app.test_client.get("/text")
     assert response.content_type == "text/plain; charset=utf-8"
@@ -193,12 +190,10 @@ def test_route_error_response_from_explicit_format(app):
     @app.get("/text", error_format="json")
     def text_response(request):
         raise Exception("oops")
-        return text("Never gonna see this")
 
     @app.get("/json", error_format="text")
     def json_response(request):
         raise Exception("oops")
-        return json({"message": "Never gonna see this"})
 
     _, response = app.test_client.get("/text")
     assert response.content_type == "application/json"
@@ -213,12 +208,10 @@ def test_blueprint_error_response_from_explicit_format(app):
     @bp.get("/text", error_format="json")
     def text_response(request):
         raise Exception("oops")
-        return text("Never gonna see this")
 
     @bp.get("/json", error_format="text")
     def json_response(request):
         raise Exception("oops")
-        return json({"message": "Never gonna see this"})
 
     app.blueprint(bp)
     _, response = app.test_client.get("/text")
@@ -276,8 +269,6 @@ def test_fallback_with_content_type_mismatch_accept(app):
     @app.route("/alt3", error_format="html", name="alt3")
     def handler(_):
         raise Exception("problem here")
-        # Yes, we know this return value is unreachable. This is on purpose.
-        return json({})
 
     app.router.finalize()
 

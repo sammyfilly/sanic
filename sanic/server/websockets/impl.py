@@ -175,17 +175,16 @@ class WebsocketImplProtocol:
             return False
         if self.connection_lost_waiter.done():
             return True
-        else:
-            try:
-                await asyncio.wait_for(
-                    asyncio.shield(self.connection_lost_waiter), timeout
-                )
-                return True
-            except asyncio.TimeoutError:
-                # Re-check self.connection_lost_waiter.done() synchronously
-                # because connection_lost() could run between the moment the
-                # timeout occurs and the moment this coroutine resumes running
-                return self.connection_lost_waiter.done()
+        try:
+            await asyncio.wait_for(
+                asyncio.shield(self.connection_lost_waiter), timeout
+            )
+            return True
+        except asyncio.TimeoutError:
+            # Re-check self.connection_lost_waiter.done() synchronously
+            # because connection_lost() could run between the moment the
+            # timeout occurs and the moment this coroutine resumes running
+            return self.connection_lost_waiter.done()
 
     async def process_events(self, events: Sequence[Event]) -> None:
         """
@@ -207,20 +206,21 @@ class WebsocketImplProtocol:
                     await self.assembler.put(event)
 
     async def process_pong(self, frame: Frame) -> None:
-        if frame.data in self.pings:
-            # Acknowledge all pings up to the one matching this pong.
-            ping_ids = []
-            for ping_id, ping in self.pings.items():
-                ping_ids.append(ping_id)
-                if not ping.done():
-                    ping.set_result(None)
-                if ping_id == frame.data:
-                    break
-            else:  # noqa
-                raise ServerError("ping_id is not in self.pings")
-            # Remove acknowledged pings from self.pings.
-            for ping_id in ping_ids:
-                del self.pings[ping_id]
+        if frame.data not in self.pings:
+            return
+        # Acknowledge all pings up to the one matching this pong.
+        ping_ids = []
+        for ping_id, ping in self.pings.items():
+            ping_ids.append(ping_id)
+            if not ping.done():
+                ping.set_result(None)
+            if ping_id == frame.data:
+                break
+        else:  # noqa
+            raise ServerError("ping_id is not in self.pings")
+        # Remove acknowledged pings from self.pings.
+        for ping_id in ping_ids:
+            del self.pings[ping_id]
 
     async def keepalive_ping(self) -> None:
         """
@@ -314,7 +314,7 @@ class WebsocketImplProtocol:
             _ = self.ws_proto.data_to_send()
             # If we're not already CLOSED or CLOSING, then send the close.
             if self.ws_proto.state is OPEN:
-                if code in (1000, 1001):
+                if code in {1000, 1001}:
                     self.ws_proto.send_close(code, reason)
                 else:
                     self.ws_proto.fail(code, reason)
@@ -447,19 +447,17 @@ class WebsocketImplProtocol:
                     await asyncio.sleep(self.close_timeout)
                 except asyncio.CancelledError:
                     ...
-                if self.io_proto and self.io_proto.transport:
-                    self.io_proto.transport.abort()
-            else:
-                if await self.wait_for_connection_lost(
+            elif await self.wait_for_connection_lost(
                     timeout=self.close_timeout
                 ):
-                    # Connection aborted before the timeout expired.
-                    return
+                # Connection aborted before the timeout expired.
+                return
+            else:
                 error_logger.warning(
                     "Timeout waiting for TCP connection to close. Aborting"
                 )
-                if self.io_proto and self.io_proto.transport:
-                    self.io_proto.transport.abort()
+            if self.io_proto and self.io_proto.transport:
+                self.io_proto.transport.abort()
 
     def abort_pings(self) -> None:
         """
@@ -787,20 +785,17 @@ class WebsocketImplProtocol:
         for data in data_to_send:
             if data:
                 await self.io_proto.send(data)
-            else:
-                # Send an EOF - We don't actually send it,
-                # just trigger to autoclose the connection
-                if (
+            elif (
                     self.auto_closer_task
                     and not self.auto_closer_task.done()
                     and self.data_finished_fut
                     and not self.data_finished_fut.done()
                 ):
-                    # Auto-close the connection
-                    self.data_finished_fut.set_result(None)
-                else:
-                    # This will fail the connection appropriately
-                    SanicProtocol.close(self.io_proto, timeout=1.0)
+                # Auto-close the connection
+                self.data_finished_fut.set_result(None)
+            else:
+                # This will fail the connection appropriately
+                SanicProtocol.close(self.io_proto, timeout=1.0)
 
     async def async_data_received(self, data_to_send, events_to_process):
         if self.ws_proto.state in (OPEN, CLOSING) and len(data_to_send) > 0:
@@ -854,7 +849,7 @@ class WebsocketImplProtocol:
         """
         The WebSocket Connection is Closed.
         """
-        if not self.ws_proto.state == CLOSED:
+        if self.ws_proto.state != CLOSED:
             # signal to the websocket connection handler
             # we've lost the connection
             self.ws_proto.fail(code=1006)

@@ -323,15 +323,14 @@ class Blueprint(BaseSanic):
                 future.error_format if future.error_format else error_format
             )
 
-            version_prefix = self.version_prefix
-            for prefix in (
-                future.version_prefix,
-                opt_version_prefix,
-            ):
-                if prefix and prefix != "/v":
-                    version_prefix = prefix
-                    break
-
+            version_prefix = next(
+                (
+                    prefix
+                    for prefix in (future.version_prefix, opt_version_prefix)
+                    if prefix and prefix != "/v"
+                ),
+                self.version_prefix,
+            )
             version = self._extract_value(
                 future.version, opt_version, self.version
             )
@@ -401,23 +400,19 @@ class Blueprint(BaseSanic):
             route = app._apply_static(apply_route)
             routes.append(route)
 
-        route_names = [route.name for route in routes if route]
-
-        if route_names:
+        if route_names := [route.name for route in routes if route]:
             # Middleware
-            for future in self._future_middleware:
-                if (self, future) in app._future_registry:
-                    continue
-                middleware.append(app._apply_middleware(future, route_names))
-
+            middleware.extend(
+                app._apply_middleware(future, route_names)
+                for future in self._future_middleware
+                if (self, future) not in app._future_registry
+            )
             # Exceptions
-            for future in self._future_exceptions:
-                if (self, future) in app._future_registry:
-                    continue
-                exception_handlers.append(
-                    app._apply_exception_handler(future, route_names)
-                )
-
+            exception_handlers.extend(
+                app._apply_exception_handler(future, route_names)
+                for future in self._future_exceptions
+                if (self, future) not in app._future_registry
+            )
         # Event listeners
         for future in self._future_listeners:
             if (self, future) in app._future_registry:
@@ -430,7 +425,7 @@ class Blueprint(BaseSanic):
                 continue
             future.condition.update({"__blueprint__": self.name})
             # Force exclusive to be False
-            app._apply_signal(tuple((*future[:-1], False)))
+            app._apply_signal((*future[:-1], False))
 
         self.routes += [route for route in routes if isinstance(route, Route)]
         self.websocket_routes += [
@@ -464,11 +459,11 @@ class Blueprint(BaseSanic):
     def event(self, event: str, timeout: Optional[Union[int, float]] = None):
         events = set()
         for app in self.apps:
-            signal = app.signal_router.name_index.get(event)
-            if not signal:
-                raise NotFound("Could not find signal %s" % event)
-            events.add(signal.ctx.event)
+            if signal := app.signal_router.name_index.get(event):
+                events.add(signal.ctx.event)
 
+            else:
+                raise NotFound(f"Could not find signal {event}")
         return asyncio.wait(
             [asyncio.create_task(event.wait()) for event in events],
             return_when=asyncio.FIRST_COMPLETED,
@@ -477,23 +472,14 @@ class Blueprint(BaseSanic):
 
     @staticmethod
     def _extract_value(*values):
-        value = values[-1]
-        for v in values:
-            if v is not None:
-                value = v
-                break
-        return value
+        return next((v for v in values if v is not None), values[-1])
 
     @staticmethod
     def _setup_uri(base: str, prefix: Optional[str]):
         uri = base
         if prefix:
             uri = prefix
-            if base.startswith("/") and prefix.endswith("/"):
-                uri += base[1:]
-            else:
-                uri += base
-
+            uri += base[1:] if base.startswith("/") and prefix.endswith("/") else base
         return uri[1:] if uri.startswith("//") else uri
 
     @staticmethod
@@ -501,4 +487,4 @@ class Blueprint(BaseSanic):
         apps: Set[Sanic], bp: Blueprint, futures: Sequence[Tuple[Any, ...]]
     ):
         for app in apps:
-            app._future_registry.update(set((bp, item) for item in futures))
+            app._future_registry.update({(bp, item) for item in futures})

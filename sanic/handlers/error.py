@@ -90,8 +90,7 @@ class ErrorHandler:
 
         for name in (route_name, None):
             exception_key = (exception_class, name)
-            handler = self.cached_handlers.get(exception_key)
-            if handler:
+            if handler := self.cached_handlers.get(exception_key):
                 return handler
 
         for name in (route_name, None):
@@ -107,8 +106,7 @@ class ErrorHandler:
                 if ancestor is BaseException:
                     break
         self.cached_handlers[(exception_class, route_name)] = None
-        handler = None
-        return handler
+        return None
 
     _lookup = _full_lookup
 

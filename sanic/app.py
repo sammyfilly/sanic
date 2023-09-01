@@ -596,13 +596,12 @@ class Sanic(
     ):
         signal = self.signal_router.name_index.get(event)
         if not signal:
-            if self.config.EVENT_AUTOREGISTER:
-                self.signal_router.reset()
-                self.add_signal(None, event)
-                signal = self.signal_router.name_index[event]
-                self.signal_router.finalize()
-            else:
-                raise NotFound("Could not find signal %s" % event)
+            if not self.config.EVENT_AUTOREGISTER:
+                raise NotFound(f"Could not find signal {event}")
+            self.signal_router.reset()
+            self.add_signal(None, event)
+            signal = self.signal_router.name_index[event]
+            self.signal_router.finalize()
         return await wait_for(signal.ctx.event.wait(), timeout=timeout)
 
     def report_exception(
@@ -811,11 +810,7 @@ class Sanic(
 
         if external:
             if not scheme:
-                if ":" in netloc[:8]:
-                    scheme = netloc[:8].split(":", 1)[0]
-                else:
-                    scheme = "http"
-
+                scheme = netloc[:8].split(":", 1)[0] if ":" in netloc[:8] else "http"
             if "://" in netloc[:8]:
                 netloc = netloc.split("://", 1)[-1]
 
@@ -880,7 +875,7 @@ class Sanic(
         request: Request,
         exception: BaseException,
         run_middleware: bool = True,
-    ):  # no cov
+    ):    # no cov
         """
         A handler that catches specific exceptions and outputs a response.
 
@@ -971,9 +966,8 @@ class Sanic(
                     request.stream.respond(response)
                 await response.send(end_stream=True)
                 raise
-        else:
-            if request.stream:
-                response = request.stream.response
+        elif request.stream:
+            response = request.stream.response
 
         # Marked for cleanup and DRY with handle_request/handle_exception
         # when ResponseStream is no longer supporder
@@ -1003,7 +997,7 @@ class Sanic(
                 f"Invalid response type {response!r} (need HTTPResponse)"
             )
 
-    async def handle_request(self, request: Request):  # no cov
+    async def handle_request(self, request: Request):    # no cov
         """Take a request from the HTTP Server and return a response object
         to be sent back The HTTP Server only expects a response object, so
         exception handling must be done here
@@ -1144,12 +1138,11 @@ class Sanic(
                     },
                 )
                 await response.eof()
-            else:
-                if not hasattr(handler, "is_websocket"):
-                    raise ServerError(
-                        f"Invalid response type {response!r} "
-                        "(need HTTPResponse)"
-                    )
+            elif not hasattr(handler, "is_websocket"):
+                raise ServerError(
+                    f"Invalid response type {response!r} "
+                    "(need HTTPResponse)"
+                )
 
         except CancelledError:
             raise
@@ -1714,10 +1707,9 @@ class Sanic(
         self.finalize()
 
         route_names = [route.extra.ident for route in self.router.routes]
-        duplicates = {
+        if duplicates := {
             name for name in route_names if route_names.count(name) > 1
-        }
-        if duplicates:
+        }:
             names = ", ".join(duplicates)
             message = (
                 f"Duplicate route names detected: {names}. You should rename "
@@ -1730,11 +1722,10 @@ class Sanic(
 
         Sanic._check_uvloop_conflict()
 
-        # Startup time optimizations
-        if self.state.primary:
             # TODO:
             # - Raise warning if secondary apps have error handler config
-            if self.config.TOUCHUP:
+        if self.config.TOUCHUP:
+            if self.state.primary:
                 TouchUp.run(self)
 
         self.state.is_started = True

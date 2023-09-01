@@ -39,9 +39,9 @@ class WebSocketConnection:
         message: Dict[str, Union[str, bytes]] = {"type": "websocket.send"}
 
         if isinstance(data, bytes):
-            message.update({"bytes": data})
+            message["bytes"] = data
         else:
-            message.update({"text": str(data)})
+            message["text"] = str(data)
 
         await self._send(message)
 
@@ -56,9 +56,6 @@ class WebSocketConnection:
                     return message["bytes"]
                 except KeyError:
                     raise InvalidUsage("Bad ASGI message received")
-        elif message["type"] == "websocket.disconnect":
-            pass
-
         return None
 
     receive = recv

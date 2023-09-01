@@ -49,8 +49,7 @@ def static_file_directory():
     """The static directory to serve"""
     current_file = inspect.getfile(inspect.currentframe())
     current_directory = os.path.dirname(os.path.abspath(current_file))
-    static_directory = os.path.join(current_directory, "static")
-    return static_directory
+    return os.path.join(current_directory, "static")
 
 
 def get_file_path(static_file_directory, file_name):
@@ -857,7 +856,7 @@ def test_static_blueprintp_mw(app: Sanic, static_file_directory, file_name):
     assert uri == "/test.file"
 
     _, response = app.test_client.get("/test.file")
-    assert triggered is True
+    assert triggered
 
 
 def test_websocket_route(app: Sanic):

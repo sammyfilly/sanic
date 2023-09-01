@@ -83,7 +83,7 @@ class Reloader:
             *(d.glob("**/*") for d in self.reload_dirs),
         )
 
-    def python_files(self):  # no cov
+    def python_files(self):    # no cov
         """This iterates over all relevant Python files.
 
         It goes through all
@@ -95,8 +95,7 @@ class Reloader:
         for module in list(sys.modules.values()):
             if module is None:
                 continue
-            filename = getattr(module, "__file__", None)
-            if filename:
+            if filename := getattr(module, "__file__", None):
                 old = None
                 while not os.path.isfile(filename):
                     old = filename

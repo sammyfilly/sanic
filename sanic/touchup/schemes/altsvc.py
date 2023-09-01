@@ -49,8 +49,8 @@ class RemoveAltSvc(NodeTransformer):
     def value(self):
         values = []
         for info in self._app.state.server_info:
-            port = info.settings["port"]
             version = info.settings["version"]
             if version is HTTP.VERSION_3:
+                port = info.settings["port"]
                 values.append(f'h3=":{port}"')
         return ", ".join(values)

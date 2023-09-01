@@ -42,7 +42,7 @@ def selfsigned(key, common_name, san):
             NameAttribute(NameOID.ORGANIZATION_NAME, "Sanic Org"),
         ]
     )
-    cert = (
+    return (
         CertificateBuilder()
         .subject_name(subject)
         .issuer_name(issuer)
@@ -82,7 +82,6 @@ def selfsigned(key, common_name, san):
         )
         .sign(key, hashes.SHA256())
     )
-    return cert
 
 
 # Sanic example/test self-signed cert RSA

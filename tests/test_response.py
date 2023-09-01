@@ -317,8 +317,7 @@ def static_file_directory():
     """The static directory to serve"""
     current_file = inspect.getfile(inspect.currentframe())
     current_directory = os.path.dirname(os.path.abspath(current_file))
-    static_directory = os.path.join(current_directory, "static")
-    return static_directory
+    return os.path.join(current_directory, "static")
 
 
 def path_str_to_path_obj(static_file_directory: Union[Path, str]):

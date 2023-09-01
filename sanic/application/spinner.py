@@ -42,8 +42,7 @@ class Spinner:  # noqa
     @staticmethod
     def cursor():
         while True:
-            for cursor in "|/-\\":
-                yield cursor
+            yield from "|/-\\"
 
     @staticmethod
     def hide():

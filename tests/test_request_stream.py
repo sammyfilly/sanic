@@ -581,7 +581,7 @@ def test_streaming_echo():
         )
         # Read response
         res = b""
-        while not b"\r\n\r\n" in res:
+        while b"\r\n\r\n" not in res:
             res += await reader.read(4096)
         assert res.startswith(b"HTTP/1.1 200 OK\r\n")
         assert res.endswith(b"\r\n\r\n")
@@ -589,7 +589,7 @@ def test_streaming_echo():
 
         async def read_chunk():
             nonlocal buffer
-            while not b"\r\n" in buffer:
+            while b"\r\n" not in buffer:
                 data = await reader.read(4096)
                 assert data
                 buffer += data
@@ -618,6 +618,6 @@ def test_streaming_echo():
         assert res == b"-"
 
         res = await read_chunk()
-        assert res == None
+        assert res is None
 
     app.run(access_log=False, single_process=True)

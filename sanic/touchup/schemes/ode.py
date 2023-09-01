@@ -32,12 +32,11 @@ class OptionalDispatchEvent(BaseScheme):
                 all_events.update(app_events[app])
 
         for app, events in app_events.items():
-            missing = {
+            if missing := {
                 x
                 for x in all_events.difference(events)
                 if any(x.startswith(y) for y in self.SYNC_SIGNAL_NAMESPACES)
-            }
-            if missing:
+            }:
                 was_finalized = app.signal_router.finalized
                 if was_finalized:  # no cov
                     app.signal_router.reset()

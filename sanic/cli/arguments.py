@@ -27,8 +27,7 @@ class Group:
 
     @classmethod
     def create(cls, parser: ArgumentParser):
-        instance = cls(parser, cls.name)
-        return instance
+        return cls(parser, cls.name)
 
     def add_bool_arguments(self, *args, nullable=False, **kwargs):
         group = self.container.add_mutually_exclusive_group()
@@ -36,7 +35,7 @@ class Group:
         group.add_argument(*args, action="store_true", **kwargs)
         kwargs["help"] = f"no {kwargs['help'].lower()}".capitalize()
         group.add_argument(
-            "--no-" + args[0][2:], *args[1:], action="store_false", **kwargs
+            f"--no-{args[0][2:]}", *args[1:], action="store_false", **kwargs
         )
         if nullable:
             params = {args[0][2:].replace("-", "_"): None}

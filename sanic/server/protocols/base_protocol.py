@@ -59,10 +59,7 @@ class SanicProtocol(asyncio.Protocol):
 
     @property
     def ctx(self):
-        if self.conn_info is not None:
-            return self.conn_info.ctx
-        else:
-            return None
+        return self.conn_info.ctx if self.conn_info is not None else None
 
     async def send(self, data):
         """

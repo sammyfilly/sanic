@@ -67,7 +67,7 @@ def test_iter_files():
 
     static_dir = Path(__file__).parent.parent / "static"
     len_static_files = len(list(static_dir.glob("**/*")))
-    reloader = Reloader(Mock(), 0.1, set({static_dir}), Mock())
+    reloader = Reloader(Mock(), 0.1, {static_dir}, Mock())
     len_total_files = len(list(reloader.files()))
     assert len_static_files > 0
     assert len_total_files == len_python_files + len_static_files

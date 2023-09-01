@@ -126,16 +126,12 @@ class Router(BaseRouter):
             overwrite=overwrite,
         )
 
-        if isinstance(host, str):
-            hosts = [host]
-        else:
-            hosts = host or [None]  # type: ignore
-
+        hosts = [host] if isinstance(host, str) else host or [None]
         routes = []
 
         for host in hosts:
             if host:
-                params.update({"requirements": {"host": host}})
+                params["requirements"] = {"host": host}
 
             ident = name
             if len(hosts) > 1:
@@ -158,9 +154,7 @@ class Router(BaseRouter):
 
             routes.append(route)
 
-        if len(routes) == 1:
-            return routes[0]
-        return routes
+        return routes[0] if len(routes) == 1 else routes
 
     @lru_cache(maxsize=ROUTER_CACHE_SIZE)
     def find_route_by_view_name(self, view_name, name=None):
@@ -179,10 +173,7 @@ class Router(BaseRouter):
             full_name = self.ctx.app._generate_name(view_name)
             route = self.name_index.get(full_name)
 
-        if not route:
-            return None
-
-        return route
+        return None if not route else route
 
     @property
     def routes_all(self):
@@ -227,8 +218,7 @@ class Router(BaseRouter):
         for part in uri.split("/"):
             if part.startswith("<") and ":" not in part:
                 name = part[1:-1]
-                annotation = mapping.get(name)
-                if annotation:
+                if annotation := mapping.get(name):
                     part = f"<{name}:{annotation}>"
             reconstruction.append(part)
         return "/".join(reconstruction)

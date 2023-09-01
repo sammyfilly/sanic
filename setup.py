@@ -99,9 +99,9 @@ setup_kwargs = {
 env_dependency = (
     '; sys_platform != "win32" ' 'and implementation_name == "cpython"'
 )
-ujson = "ujson>=1.35" + env_dependency
-uvloop = "uvloop>=0.15.0" + env_dependency
-types_ujson = "types-ujson" + env_dependency
+ujson = f"ujson>=1.35{env_dependency}"
+uvloop = f"uvloop>=0.15.0{env_dependency}"
+types_ujson = f"types-ujson{env_dependency}"
 requirements = [
     "sanic-routing>=23.6.0",
     "httptools>=0.0.10",

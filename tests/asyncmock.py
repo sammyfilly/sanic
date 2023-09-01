@@ -30,7 +30,7 @@ class AsyncMock(Mock):
         self.await_count = 0
 
     def assert_awaited_once(self):
-        if not self.await_count == 1:
+        if self.await_count != 1:
             msg = (
                 f"Expected to have been awaited once."
                 f" Awaited {self.await_count} times."
@@ -38,7 +38,7 @@ class AsyncMock(Mock):
             raise AssertionError(msg)
 
     def assert_awaited_once_with(self, *args, **kwargs):
-        if not self.await_count == 1:
+        if self.await_count != 1:
             msg = (
                 f"Expected to have been awaited once."
                 f" Awaited {self.await_count} times."

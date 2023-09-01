@@ -84,10 +84,7 @@ class RouteStringGenerator:
             current_length = len(route.split("/"))
             new_route_part = "/".join(
                 [
-                    "<{}:{}>".format(
-                        TYPE_TO_GENERATOR_MAP.get("str")(),
-                        random.choice(self.ROUTE_PARAM_TYPES),
-                    )
+                    f'<{TYPE_TO_GENERATOR_MAP.get("str")()}:{random.choice(self.ROUTE_PARAM_TYPES)}>'
                     for _ in range(max_route_depth - current_length)
                 ]
             )
@@ -99,10 +96,7 @@ class RouteStringGenerator:
     @staticmethod
     def generate_url_for_template(template):
         url = template
-        for pattern, param_type in re.findall(
-            re.compile(r"((?:<\w+:(str|int|float|alpha|uuid)>)+)"),
-            template,
-        ):
+        for pattern, param_type in re.findall(re.compile(r"((?:<\w+:(str|int|float|alpha|uuid)>)+)"), url):
             value = TYPE_TO_GENERATOR_MAP.get(param_type)()
             url = url.replace(pattern, str(value), -1)
         return url
@@ -116,7 +110,7 @@ def sanic_router(app):
         router.ctx.app = app
         added_router = []
         for method, route in route_details:
-            try:
+            with suppress(RouteExists):
                 router.add(
                     uri=f"/{route}",
                     methods=frozenset({method}),
@@ -124,8 +118,6 @@ def sanic_router(app):
                     handler=_handler,
                 )
                 added_router.append((method, route))
-            except RouteExists:
-                pass
         router.finalize()
         return router, tuple(added_router)
 
@@ -147,9 +139,7 @@ def app(request):
     if not CACHE:
         for target, method_name in TouchUp._registry:
             CACHE[method_name] = getattr(target, method_name)
-    app = Sanic(slugify.sub("-", request.node.name))
-
-    yield app
+    yield Sanic(slugify.sub("-", request.node.name))
     for target, method_name in TouchUp._registry:
         setattr(target, method_name, CACHE[method_name])
     Sanic._app_registry.clear()
@@ -240,5 +230,4 @@ def static_file_directory():
     """The static directory to serve"""
     current_file = inspect.getfile(inspect.currentframe())
     current_directory = os.path.dirname(os.path.abspath(current_file))
-    static_directory = os.path.join(current_directory, "static")
-    return static_directory
+    return os.path.join(current_directory, "static")

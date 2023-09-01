@@ -559,7 +559,7 @@ class PyFileError(SanicException):
         headers: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(
-            "could not execute config file %s" % file,
+            f"could not execute config file {file}",
             status_code=status_code,
             quiet=quiet,
             context=context,

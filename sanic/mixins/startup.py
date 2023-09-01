@@ -208,10 +208,7 @@ class StartupMixin(metaclass=SanicMeta):
             single_process=single_process,
         )
 
-        if single_process:
-            serve = self.__class__.serve_single
-        else:
-            serve = self.__class__.serve
+        serve = self.__class__.serve_single if single_process else self.__class__.serve
         serve(primary=self)  # type: ignore
 
     def prepare(
@@ -269,7 +266,7 @@ class StartupMixin(metaclass=SanicMeta):
                 "or auto-reload"
             )
 
-        if register_sys_signals is False and not single_process:
+        if not register_sys_signals and not single_process:
             raise RuntimeError(
                 "Cannot run Sanic.serve with register_sys_signals=False. "
                 "Use Sanic.serve_single."
@@ -588,11 +585,10 @@ class StartupMixin(metaclass=SanicMeta):
             mode.append("goin' fast")
         if self.state.asgi:
             mode.append("ASGI")
+        elif self.state.workers == 1:
+            mode.append("single worker")
         else:
-            if self.state.workers == 1:
-                mode.append("single worker")
-            else:
-                mode.append(f"w/ {self.state.workers} workers")
+            mode.append(f"w/ {self.state.workers} workers")
 
         if server_settings:
             server = ", ".join(
@@ -640,7 +636,7 @@ class StartupMixin(metaclass=SanicMeta):
             display["packages"] = ", ".join(packages)
 
         if self.config.MOTD_DISPLAY:
-            extra.update(self.config.MOTD_DISPLAY)
+            extra |= self.config.MOTD_DISPLAY
 
         return display, extra
 
@@ -658,15 +654,13 @@ class StartupMixin(metaclass=SanicMeta):
         server_settings: Optional[Dict[str, Any]] = None
     ) -> str:
         serve_location = ""
-        proto = "http"
         if not server_settings:
             return serve_location
 
         host = server_settings["host"]
         port = server_settings["port"]
 
-        if server_settings.get("ssl") is not None:
-            proto = "https"
+        proto = "https" if server_settings.get("ssl") is not None else "http"
         if server_settings.get("unix"):
             serve_location = f'{server_settings["unix"]} {proto}://...'
         elif server_settings.get("sock"):
@@ -740,13 +734,13 @@ class StartupMixin(metaclass=SanicMeta):
             if not primary:
                 if app_loader:
                     primary = app_loader.load()
-                if not primary:
-                    try:
-                        primary = apps[0]
-                    except IndexError:
-                        raise RuntimeError(
-                            "Did not find any applications."
-                        ) from None
+            if not primary:
+                try:
+                    primary = apps[0]
+                except IndexError:
+                    raise RuntimeError(
+                        "Did not find any applications."
+                    ) from None
 
             # This exists primarily for unit testing
             if not primary.state.server_info:  # no cov
@@ -905,8 +899,7 @@ class StartupMixin(metaclass=SanicMeta):
             loop.close()
             cls._cleanup_env_vars()
             cls._cleanup_apps()
-            unix = kwargs.get("unix")
-            if unix:
+            if unix := kwargs.get("unix"):
                 remove_unix_socket(unix)
         if exit_code:
             os._exit(exit_code)
@@ -944,8 +937,7 @@ class StartupMixin(metaclass=SanicMeta):
         kwargs["app_loader"] = None
         sock = configure_socket(kwargs)
 
-        kwargs["server_info"] = {}
-        kwargs["server_info"][primary.name] = []
+        kwargs["server_info"] = {primary.name: []}
         for server_info in primary.state.server_info:
             server_info.settings = {
                 k: v
@@ -1006,11 +998,10 @@ class StartupMixin(metaclass=SanicMeta):
             for server_info in app.state.server_info:
                 if server_info.stage is not ServerStage.SERVING:
                     app.state.primary = False
-                    handlers = [
+                    if handlers := [
                         *server_info.settings.pop("main_start", []),
                         *server_info.settings.pop("main_stop", []),
-                    ]
-                    if handlers:  # no cov
+                    ]:
                         error_logger.warning(
                             f"Sanic found {len(handlers)} listener(s) on "
                             "secondary applications attached to the main "

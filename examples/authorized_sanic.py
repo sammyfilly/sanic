@@ -10,9 +10,7 @@ app = Sanic("Example")
 
 
 def check_request_for_authorization_status(request):
-    # Note: Define your check, for instance cookie, session.
-    flag = True
-    return flag
+    return True
 
 
 def authorized(f):

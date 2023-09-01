@@ -33,8 +33,7 @@ class DirectoryPage(BasePage):  # no cov
     def _body(self) -> None:
         with self.doc.main:
             self._headline()
-            files = list(self.files)
-            if files:
+            if files := list(self.files):
                 self._file_table(files)
             else:
                 self.doc.p("The folder is empty.")

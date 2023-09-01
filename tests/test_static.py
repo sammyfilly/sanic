@@ -324,8 +324,9 @@ def test_static_content_range_error(app, file_name, static_file_directory):
     assert response.status == 416
     assert "Content-Length" in response.headers
     assert "Content-Range" in response.headers
-    assert response.headers["Content-Range"] == "bytes */%s" % (
-        len(get_file_content(static_file_directory, file_name)),
+    assert (
+        response.headers["Content-Range"]
+        == f"bytes */{len(get_file_content(static_file_directory, file_name))}"
     )
 
 
@@ -652,7 +653,7 @@ def test_dotted_dir_ok(
     dot_relative_path = str(
         double_dotted_directory_file.relative_to(static_file_directory)
     )
-    _, response = app.test_client.get("/foo/" + dot_relative_path)
+    _, response = app.test_client.get(f"/foo/{dot_relative_path}")
     assert response.status == 200
     assert response.body == b"DOT\n"
 

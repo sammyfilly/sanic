@@ -267,7 +267,7 @@ class StaticHandleMixin(metaclass=SanicMeta):
                         pass
                     else:
                         del headers["Content-Length"]
-                        headers.update(_range.headers)
+                        headers |= _range.headers
 
             if "content-type" not in headers:
                 content_type = (
@@ -286,20 +286,19 @@ class StaticHandleMixin(metaclass=SanicMeta):
 
             if request.method == "HEAD":
                 return HTTPResponse(headers=headers)
-            else:
-                if stream_large_files:
-                    if isinstance(stream_large_files, bool):
-                        threshold = 1024 * 1024
-                    else:
-                        threshold = stream_large_files
-
-                    if not stats:
-                        stats = await stat_async(file_path)
-                    if stats.st_size >= threshold:
-                        return await file_stream(
-                            file_path, headers=headers, _range=_range
-                        )
-                return await file(file_path, headers=headers, _range=_range)
+            if stream_large_files:
+                threshold = (
+                    1024 * 1024
+                    if isinstance(stream_large_files, bool)
+                    else stream_large_files
+                )
+                if not stats:
+                    stats = await stat_async(file_path)
+                if stats.st_size >= threshold:
+                    return await file_stream(
+                        file_path, headers=headers, _range=_range
+                    )
+            return await file(file_path, headers=headers, _range=_range)
         except (IsADirectoryError, PermissionError):
             return await directory_handler.handle(request, request.path)
         except RangeNotSatisfiable:

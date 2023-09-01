@@ -203,10 +203,7 @@ def test_cookie_max_age(app, max_age):
         )
 
         assert cookie == "pass"
-        assert (
-            cookie_expires == expires
-            or cookie_expires == expires + timedelta(seconds=-1)
-        )
+        assert cookie_expires in [expires, expires + timedelta(seconds=-1)]
     else:
         assert cookie is None
 

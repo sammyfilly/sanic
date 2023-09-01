@@ -59,56 +59,55 @@ class AppLoader:
 
         if self.factory:
             return self.factory()
+        from sanic.app import Sanic
+        from sanic.simple import create_simple_server
+
+        maybe_path = Path(self.module_input)
+        if self.as_simple or (
+            maybe_path.is_dir()
+            and ("\\" in self.module_input or "/" in self.module_input)
+        ):
+            app = create_simple_server(maybe_path)
         else:
-            from sanic.app import Sanic
-            from sanic.simple import create_simple_server
+            implied_app_name = False
+            if not self.module_name and not self.app_name:
+                self.module_name = self.module_input
+                self.app_name = DEFAULT_APP_NAME
+                implied_app_name = True
+            module = import_module(self.module_name)
+            app = getattr(module, self.app_name, None)
+            if not app and implied_app_name:
+                raise ValueError(
+                    "Looks like you only supplied a module name. Sanic "
+                    "tried to locate an application instance named "
+                    f"{self.module_name}:app, but was unable to locate "
+                    "an application instance. Please provide a path "
+                    "to a global instance of Sanic(), or a callable that "
+                    "will return a Sanic() application instance."
+                )
+            if self.as_factory or isfunction(app):
+                try:
+                    app = app(self.args)
+                except TypeError:
+                    app = app()
 
-            maybe_path = Path(self.module_input)
-            if self.as_simple or (
-                maybe_path.is_dir()
-                and ("\\" in self.module_input or "/" in self.module_input)
+            app_type_name = type(app).__name__
+
+            if (
+                not isinstance(app, Sanic)
+                and self.args
+                and hasattr(self.args, "target")
             ):
-                app = create_simple_server(maybe_path)
-            else:
-                implied_app_name = False
-                if not self.module_name and not self.app_name:
-                    self.module_name = self.module_input
-                    self.app_name = DEFAULT_APP_NAME
-                    implied_app_name = True
-                module = import_module(self.module_name)
-                app = getattr(module, self.app_name, None)
-                if not app and implied_app_name:
-                    raise ValueError(
-                        "Looks like you only supplied a module name. Sanic "
-                        "tried to locate an application instance named "
-                        f"{self.module_name}:app, but was unable to locate "
-                        "an application instance. Please provide a path "
-                        "to a global instance of Sanic(), or a callable that "
-                        "will return a Sanic() application instance."
+                with suppress(ModuleNotFoundError):
+                    maybe_module = import_module(self.module_input)
+                    app = getattr(maybe_module, "app", None)
+                if not app:
+                    message = (
+                        "Module is not a Sanic app, "
+                        f"it is a {app_type_name}\n"
+                        f"  Perhaps you meant {self.args.target}:app?"
                     )
-                if self.as_factory or isfunction(app):
-                    try:
-                        app = app(self.args)
-                    except TypeError:
-                        app = app()
-
-                app_type_name = type(app).__name__
-
-                if (
-                    not isinstance(app, Sanic)
-                    and self.args
-                    and hasattr(self.args, "target")
-                ):
-                    with suppress(ModuleNotFoundError):
-                        maybe_module = import_module(self.module_input)
-                        app = getattr(maybe_module, "app", None)
-                    if not app:
-                        message = (
-                            "Module is not a Sanic app, "
-                            f"it is a {app_type_name}\n"
-                            f"  Perhaps you meant {self.args.target}:app?"
-                        )
-                        raise ValueError(message)
+                    raise ValueError(message)
         return app
 
 

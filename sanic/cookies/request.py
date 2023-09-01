@@ -38,12 +38,10 @@ def _unquote(str):  # no cov
         if q_match:
             k = q_match.start(0)
         if q_match and (not o_match or k < j):
-            res.append(str[i:k])
-            res.append(str[k + 1])
+            res.extend((str[i:k], str[k + 1]))
             i = k + 2
         else:
-            res.append(str[i:j])
-            res.append(chr(int(str[j + 1 : j + 4], 8)))  # noqa: E203
+            res.extend((str[i:j], chr(int(str[j + 1 : j + 4], 8))))
             i = j + 4
     return "".join(res)
 

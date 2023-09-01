@@ -17,10 +17,10 @@ def index(request):
 async def feed(request, ws):
     while True:
         data = "hello!"
-        print("Sending: " + data)
+        print(f"Sending: {data}")
         await ws.send(data)
         data = await ws.recv()
-        print("Received: " + data)
+        print(f"Received: {data}")
 
 
 if __name__ == "__main__":

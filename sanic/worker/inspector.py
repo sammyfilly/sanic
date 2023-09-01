@@ -66,11 +66,8 @@ class Inspector:
     async def _action(self, request: Request, action: str):
         logger.info("Incoming inspector action: %s", action)
         output: Any = None
-        method = getattr(self, action, None)
-        if method:
-            kwargs = {}
-            if request.body:
-                kwargs = request.json
+        if method := getattr(self, action, None):
+            kwargs = request.json if request.body else {}
             args = kwargs.pop("args", ())
             output = method(*args, **kwargs)
             if isawaitable(output):
@@ -86,9 +83,10 @@ class Inspector:
         return json({"meta": {"action": name}, "result": output})
 
     def _state_to_json(self) -> Dict[str, Any]:
-        output = {"info": self.app_info}
-        output["workers"] = self._make_safe(dict(self.worker_state))
-        return output
+        return {
+            "info": self.app_info,
+            "workers": self._make_safe(dict(self.worker_state)),
+        }
 
     @staticmethod
     def _make_safe(obj: Dict[str, Any]) -> Dict[str, Any]:
@@ -106,9 +104,7 @@ class Inspector:
         self._publisher.send(message)
 
     def scale(self, replicas) -> str:
-        num_workers = 1
-        if replicas:
-            num_workers = int(replicas)
+        num_workers = int(replicas) if replicas else 1
         log_msg = f"Scaling to {num_workers}"
         logger.info(log_msg)
         message = f"__SCALE__:{num_workers}"

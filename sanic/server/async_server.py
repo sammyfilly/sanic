@@ -65,9 +65,7 @@ class AsyncioServer:
         return self._server_event("shutdown", "after")
 
     def is_serving(self) -> bool:
-        if self.server:
-            return self.server.is_serving()
-        return False
+        return self.server.is_serving() if self.server else False
 
     def wait_closed(self):
         if self.server:
@@ -77,8 +75,7 @@ class AsyncioServer:
         if self.server:
             self.server.close()
             coro = self.wait_closed()
-            task = asyncio.ensure_future(coro, loop=self.loop)
-            return task
+            return asyncio.ensure_future(coro, loop=self.loop)
 
     def start_serving(self):
         return self._serve(self.server.start_serving)

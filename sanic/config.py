@@ -77,8 +77,8 @@ DEFAULT_CONFIG = {
 
 
 class DescriptorMeta(ABCMeta):
-    def __init__(cls, *_):
-        cls.__setters__ = {name for name, _ in getmembers(cls, cls._is_setter)}
+    def __init__(self, *_):
+        self.__setters__ = {name for name, _ in getmembers(cls, cls._is_setter)}
 
     @staticmethod
     def _is_setter(member: object):
@@ -148,12 +148,11 @@ class Config(dict, metaclass=DescriptorMeta):
         if keep_alive is not None:
             self.KEEP_ALIVE = keep_alive
 
-        if env_prefix != SANIC_PREFIX:
-            if env_prefix:
-                self.load_environment_vars(env_prefix)
-        else:
+        if env_prefix == SANIC_PREFIX:
             self.load_environment_vars(SANIC_PREFIX)
 
+        elif env_prefix:
+            self.load_environment_vars(env_prefix)
         self._configure_header_size()
         self._check_error_format()
         self._init = True
@@ -171,11 +170,9 @@ class Config(dict, metaclass=DescriptorMeta):
         self.update({attr: value})
 
     def update(self, *other: Any, **kwargs: Any) -> None:
-        kwargs.update({k: v for item in other for k, v in dict(item).items()})
+        kwargs |= {k: v for item in other for k, v in dict(item).items()}
         setters: Dict[str, Any] = {
-            k: kwargs.pop(k)
-            for k in {**kwargs}.keys()
-            if k in self.__class__.__setters__
+            k: kwargs.pop(k) for k in {**kwargs} if k in self.__class__.__setters__
         }
 
         for key, value in setters.items():
@@ -185,7 +182,7 @@ class Config(dict, metaclass=DescriptorMeta):
                 ...
 
         super().update(**kwargs)
-        for attr, value in {**setters, **kwargs}.items():
+        for attr, value in (setters | kwargs).items():
             self._post_set(attr, value)
 
     def _post_set(self, attr, value) -> None:
@@ -340,16 +337,12 @@ class Config(dict, metaclass=DescriptorMeta):
         if not isinstance(config, dict):
             cfg = {}
             if not isclass(config):
-                cfg.update(
-                    {
-                        key: getattr(config, key)
-                        for key in config.__class__.__dict__.keys()
-                    }
-                )
+                cfg |= {
+                    key: getattr(config, key)
+                    for key in config.__class__.__dict__.keys()
+                }
 
-            config = dict(config.__dict__)
-            config.update(cfg)
-
+            config = dict(config.__dict__) | cfg
         config = dict(filter(lambda i: i[0].isupper(), config.items()))
 
         self.update(config)

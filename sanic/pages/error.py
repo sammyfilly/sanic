@@ -55,9 +55,7 @@ class ErrorPage(BasePage):
         route_name = self.request.name or "[route not found]"
         with self.doc.main:
             self.doc.h1(f"⚠️ {self.title}").p(self.text)
-            # Show context details if available on the exception
-            context = getattr(self.exc, "context", None)
-            if context:
+            if context := getattr(self.exc, "context", None):
                 self._key_value_table(
                     "Issue context", "exception-context", context
                 )
@@ -69,9 +67,7 @@ class ErrorPage(BasePage):
             # Show additional details in debug mode,
             # open by default for 500 errors
             with self.doc.details(open=self.details_open, class_="smalltext"):
-                # Show extra details if available on the exception
-                extra = getattr(self.exc, "extra", None)
-                if extra:
+                if extra := getattr(self.exc, "extra", None):
                     self._key_value_table(
                         "Issue extra data", "exception-extra", extra
                     )

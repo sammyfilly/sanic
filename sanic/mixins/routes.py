@@ -89,7 +89,7 @@ class RouteMixin(BaseMixin, metaclass=SanicMeta):
         # Fix case where the user did not prefix the URL with a /
         # and will probably get confused as to why it's not working
         if not uri.startswith("/") and (uri or hasattr(self, "router")):
-            uri = "/" + uri
+            uri = f"/{uri}"
 
         if strict_slashes is None:
             strict_slashes = self.strict_slashes
@@ -144,7 +144,7 @@ class RouteMixin(BaseMixin, metaclass=SanicMeta):
             route = FutureRoute(
                 handler,
                 uri,
-                None if websocket else frozenset([x.upper() for x in methods]),
+                None if websocket else frozenset(x.upper() for x in methods),
                 host,
                 strict_slashes,
                 stream,
@@ -188,9 +188,7 @@ class RouteMixin(BaseMixin, metaclass=SanicMeta):
             if apply:
                 self._apply_route(route, overwrite=overwrite)
 
-            if static:
-                return route, handler
-            return handler
+            return (route, handler) if static else handler
 
         return decorator
 
@@ -234,8 +232,7 @@ class RouteMixin(BaseMixin, metaclass=SanicMeta):
 
             for method in HTTP_METHODS:
                 view_class = getattr(handler, "view_class")
-                _handler = getattr(view_class, method.lower(), None)
-                if _handler:
+                if _handler := getattr(view_class, method.lower(), None):
                     methods.add(method)
                     if hasattr(_handler, "is_stream"):
                         stream = True
@@ -714,7 +711,7 @@ class RouteMixin(BaseMixin, metaclass=SanicMeta):
     def _build_route_context(self, raw: Dict[str, Any]) -> HashableDict:
         ctx_kwargs = {
             key.replace("ctx_", ""): raw.pop(key)
-            for key in {**raw}.keys()
+            for key in {**raw}
             if key.startswith("ctx_")
         }
         if raw:

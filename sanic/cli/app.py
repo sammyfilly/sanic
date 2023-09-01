@@ -126,7 +126,7 @@ Or, a path to a directory to run as a simple HTTP server:
                         key, value = arg.split("=")
                         key = key.lstrip("-")
                     except ValueError:
-                        value = False if arg.startswith("--no-") else True
+                        value = not arg.startswith("--no-")
                         key = (
                             arg.replace("--no-", "")
                             .lstrip("-")
@@ -174,19 +174,18 @@ Or, a path to a directory to run as a simple HTTP server:
         try:
             app = app_loader.load()
         except ImportError as e:
-            if app_loader.module_name.startswith(e.name):  # type: ignore
-                error_logger.error(
-                    f"No module named {e.name} found.\n"
-                    "  Example File: project/sanic_server.py -> app\n"
-                    "  Example Module: project.sanic_server.app"
-                )
-                error_logger.error(
-                    "\nThe error below might have caused the above one:\n"
-                    f"{e.msg}"
-                )
-                sys.exit(1)
-            else:
+            if not app_loader.module_name.startswith(e.name):
                 raise e
+            error_logger.error(
+                f"No module named {e.name} found.\n"
+                "  Example File: project/sanic_server.py -> app\n"
+                "  Example Module: project.sanic_server.app"
+            )
+            error_logger.error(
+                "\nThe error below might have caused the above one:\n"
+                f"{e.msg}"
+            )
+            sys.exit(1)
         return app
 
     def _build_run_kwargs(self):

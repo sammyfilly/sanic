@@ -247,7 +247,7 @@ def test_config_custom_defaults():
     }
     conf = Config(defaults=custom_defaults)
     for key, value in DEFAULT_CONFIG.items():
-        if key in custom_defaults.keys():
+        if key in custom_defaults:
             value = custom_defaults[key]
         assert getattr(conf, key) == value
 
@@ -274,17 +274,17 @@ def test_config_custom_defaults_with_env():
 
     conf = Config(defaults=custom_defaults)
     for key, value in DEFAULT_CONFIG.items():
-        if "SANIC_" + key in environ_defaults.keys():
-            value = environ_defaults["SANIC_" + key]
+        if f"SANIC_{key}" in environ_defaults:
+            value = environ_defaults[f"SANIC_{key}"]
             try:
                 value = int(value)
             except ValueError:
-                if value in ["True", "False"]:
+                if value in {"True", "False"}:
                     value = value == "True"
 
         assert getattr(conf, key) == value
 
-    for key, value in environ_defaults.items():
+    for key in environ_defaults:
         del environ[key]
 
 
