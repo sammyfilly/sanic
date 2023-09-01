@@ -249,9 +249,7 @@ class WebsocketFrameAssembler:
                 self.decoder = UTF8Decoder(errors="strict")
             elif frame.opcode is Opcode.BINARY:
                 self.decoder = None
-            elif frame.opcode is Opcode.CONT:
-                pass
-            else:
+            elif frame.opcode is not Opcode.CONT:
                 # Ignore control frames.
                 return
             data: Data

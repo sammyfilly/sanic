@@ -70,7 +70,7 @@ class HTTP3Transport(TransportProtocol):
 
     def get_extra_info(self, info: str, default: Any = None) -> Any:
         if (
-            info in ("socket", "sockname", "peername")
+            info in {"socket", "sockname", "peername"}
             and self._protocol._transport
         ):
             return self._protocol._transport.get_extra_info(info, default)
@@ -165,11 +165,10 @@ class HTTPReceiver(Receiver, Stream):
             else:
                 headers["transfer-encoding"] = "chunked"
 
-        headers = [
+        return [
             (b":status", str(response.status).encode()),
             *response.processed_headers,
         ]
-        return headers
 
     def send_headers(self) -> None:
         logger.debug(  # no cov
@@ -352,9 +351,7 @@ class Http3:
         method = headers[":method"]
         path = headers[":path"]
         scheme = headers.pop(":scheme", "")
-        authority = headers.pop(":authority", "")
-
-        if authority:
+        if authority := headers.pop(":authority", ""):
             headers["host"] = authority
 
         try:

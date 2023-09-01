@@ -56,8 +56,7 @@ def server_cert():
 
 @pytest.fixture
 def issue_cert(server_cert):
-    mock = Mock(return_value=server_cert)
-    return mock
+    return Mock(return_value=server_cert)
 
 
 @pytest.fixture
@@ -147,7 +146,7 @@ def test_url_attributes_with_ssl_context(app, path, query, expected_url):
     app.add_route(handler, path)
 
     request, _ = app.test_client.get(
-        f"https://{HOST}:{PORT}" + path + f"?{query}",
+        f"https://{HOST}:{PORT}{path}" + f"?{query}",
         server_kwargs={"ssl": context},
     )
     assert request.url == expected_url.format(HOST, request.server_port)
@@ -177,7 +176,7 @@ def test_url_attributes_with_ssl_dict(app, path, query, expected_url):
     app.add_route(handler, path)
 
     request, _ = app.test_client.get(
-        f"https://{HOST}:{PORT}" + path + f"?{query}",
+        f"https://{HOST}:{PORT}{path}" + f"?{query}",
         server_kwargs={"ssl": ssl_dict},
     )
     assert request.url == expected_url.format(HOST, request.server_port)
@@ -397,7 +396,7 @@ def test_missing_cert_path(app):
         app.test_client.get("/test", server_kwargs={"ssl": ssl_list})
 
     assert "not found" in str(excinfo.value)
-    assert invalid_dir + "/privkey.pem" in str(excinfo.value)
+    assert f"{invalid_dir}/privkey.pem" in str(excinfo.value)
 
 
 def test_missing_cert_file(app):
@@ -412,7 +411,7 @@ def test_missing_cert_file(app):
         app.test_client.get("/test", server_kwargs={"ssl": ssl_list})
 
     assert "not found" in str(excinfo.value)
-    assert invalid2 + "/fullchain.pem" in str(excinfo.value)
+    assert f"{invalid2}/fullchain.pem" in str(excinfo.value)
 
 
 def test_no_certs_on_list(app):

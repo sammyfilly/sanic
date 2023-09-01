@@ -1156,7 +1156,7 @@ def test_url_attributes_no_ssl(app, path, query, expected_url):
 
     app.add_route(handler, path)
 
-    request, response = app.test_client.get(path + f"?{query}")
+    request, response = app.test_client.get(f"{path}?{query}")
     assert request.url == expected_url.format(HOST, request.server_port)
 
     parsed = urlparse(request.url)
@@ -1182,7 +1182,7 @@ async def test_url_attributes_no_ssl_asgi(app, path, query, expected_url):
 
     app.add_route(handler, path)
 
-    request, response = await app.asgi_client.get(path + f"?{query}")
+    request, response = await app.asgi_client.get(f"{path}?{query}")
     assert request.url == expected_url.format(ASGI_BASE_URL)
 
     parsed = urlparse(request.url)
@@ -2011,11 +2011,11 @@ def test_server_name_and_url_for(app):
     app.config.SERVER_NAME = "my-server"  # This means default port
     assert app.url_for("handler", _external=True) == "http://my-server/foo"
     request, response = app.test_client.get("/foo")
-    assert request.url_for("handler") == f"http://my-server/foo"
+    assert request.url_for("handler") == "http://my-server/foo"
 
     app.config.SERVER_NAME = "https://my-server/path"
     request, response = app.test_client.get("/foo")
-    url = f"https://my-server/path/foo"
+    url = "https://my-server/path/foo"
     assert app.url_for("handler", _external=True) == url
     assert request.url_for("handler") == url
 
@@ -2180,7 +2180,7 @@ def test_safe_method_with_body_ignored(app):
     )
 
     assert request.body == b""
-    assert request.json == None
+    assert request.json is None
     assert response.body == b"OK"
 
 

@@ -110,7 +110,7 @@ class MediaType:
     @property
     def has_wildcard(self) -> bool:
         """Return True if this media type has a wildcard in it."""
-        return any(part == "*" for part in (self.subtype, self.type))
+        return "*" in (self.subtype, self.type)
 
     @classmethod
     def _parse(cls, mime_with_params: str) -> Optional[MediaType]:
@@ -182,9 +182,7 @@ class Matched:
         accept = Matched.parse(other) if isinstance(other, str) else other
         if not self.header or not accept.header:
             return None
-        if self.header.match(accept.header):
-            return accept
-        return None
+        return accept if self.header.match(accept.header) else None
 
     @classmethod
     def parse(cls, raw: str) -> Matched:
@@ -252,14 +250,14 @@ def parse_accept(accept: Optional[str]) -> AcceptList:
             return AcceptList()  # Empty header, accept nothing
         accept = "*/*"  # No header means that all types are accepted
     try:
-        a = [
+        if a := [
             mt
             for mt in [MediaType._parse(mtype) for mtype in accept.split(",")]
             if mt
-        ]
-        if not a:
+        ]:
+            return AcceptList(sorted(a, key=lambda x: x.key))
+        else:
             raise ValueError
-        return AcceptList(sorted(a, key=lambda x: x.key))
     except ValueError:
         raise InvalidHeader(f"Invalid header value in Accept: {accept}")
 

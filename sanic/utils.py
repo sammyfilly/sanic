@@ -44,7 +44,7 @@ def str_to_bool(val: str) -> bool:
 
 def load_module_from_file_location(
     location: Union[bytes, str, Path], encoding: str = "utf8", *args, **kwargs
-):  # noqa
+):    # noqa
     """Returns loaded module provided as a file path.
 
     :param args:
@@ -80,11 +80,9 @@ def load_module_from_file_location(
             #    in format ${some_env_var}.
             env_vars_in_location = set(re_findall(r"\${(.+?)}", location))
 
-            # B) Check these variables exists in environment.
-            not_defined_env_vars = env_vars_in_location.difference(
+            if not_defined_env_vars := env_vars_in_location.difference(
                 os_environ.keys()
-            )
-            if not_defined_env_vars:
+            ):
                 raise LoadFileException(
                     "The following environment variables are not set: "
                     f"{', '.join(not_defined_env_vars)}"
@@ -110,7 +108,7 @@ def load_module_from_file_location(
 
         else:
             module = types.ModuleType("config")
-            module.__file__ = str(location)
+            module.__file__ = location
             try:
                 with open(location) as config_file:
                     exec(  # nosec
@@ -128,4 +126,4 @@ def load_module_from_file_location(
         try:
             return import_string(location)
         except ValueError:
-            raise IOError("Unable to load configuration %s" % str(location))
+            raise IOError(f"Unable to load configuration {str(location)}")

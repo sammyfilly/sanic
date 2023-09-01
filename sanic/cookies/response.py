@@ -48,7 +48,7 @@ def _quote(str):  # no cov
         return f'"{str.translate(TRANSLATOR)}"'
 
 
-_is_legal_key = re.compile("[%s]+" % re.escape(LEGAL_CHARS)).fullmatch
+_is_legal_key = re.compile(f"[{re.escape(LEGAL_CHARS)}]+").fullmatch
 
 
 # In v24.3, we should remove this as being a subclass of dict
@@ -191,14 +191,18 @@ class CookieJar(dict):
         host_prefix: bool = False,
         secure_prefix: bool = False,
     ) -> Optional[Cookie]:
-        for cookie in self.cookies:
-            if (
-                cookie.key == Cookie.make_key(key, host_prefix, secure_prefix)
-                and cookie.path == path
-                and cookie.domain == domain
-            ):
-                return cookie
-        return None
+        return next(
+            (
+                cookie
+                for cookie in self.cookies
+                if (
+                    cookie.key == Cookie.make_key(key, host_prefix, secure_prefix)
+                    and cookie.path == path
+                    and cookie.domain == domain
+                )
+            ),
+            None,
+        )
 
     def has_cookie(
         self,
@@ -208,14 +212,14 @@ class CookieJar(dict):
         host_prefix: bool = False,
         secure_prefix: bool = False,
     ) -> bool:
-        for cookie in self.cookies:
-            if (
+        return any(
+            (
                 cookie.key == Cookie.make_key(key, host_prefix, secure_prefix)
                 and cookie.path == path
                 and cookie.domain == domain
-            ):
-                return True
-        return False
+            )
+            for cookie in self.cookies
+        )
 
     def add_cookie(
         self,
@@ -464,7 +468,7 @@ class Cookie(dict):
     # in v24.3 when this is no longer a dict
     def _set_value(self, key: str, value: Any) -> None:
         if key not in self._keys:
-            raise KeyError("Unknown cookie property: %s=%s" % (key, value))
+            raise KeyError(f"Unknown cookie property: {key}={value}")
 
         if value is not None:
             if key.lower() == "max-age" and not str(value).isdigit():
@@ -503,7 +507,7 @@ class Cookie(dict):
 
     def __str__(self):
         """Format as a Set-Cookie header value."""
-        output = ["%s=%s" % (self.key, _quote(self.value))]
+        output = [f"{self.key}={_quote(self.value)}"]
         key_index = list(self._keys)
         for key, value in sorted(
             self.items(), key=lambda x: key_index.index(x[0])
@@ -513,19 +517,13 @@ class Cookie(dict):
                     try:
                         output.append("%s=%d" % (self._keys[key], value))
                     except TypeError:
-                        output.append("%s=%s" % (self._keys[key], value))
+                        output.append(f"{self._keys[key]}={value}")
                 elif key == "expires":
-                    output.append(
-                        "%s=%s"
-                        % (
-                            self._keys[key],
-                            value.strftime("%a, %d-%b-%Y %T GMT"),
-                        )
-                    )
+                    output.append(f'{self._keys[key]}={value.strftime("%a, %d-%b-%Y %T GMT")}')
                 elif key in self._flags:
                     output.append(self._keys[key])
                 else:
-                    output.append("%s=%s" % (self._keys[key], value))
+                    output.append(f"{self._keys[key]}={value}")
 
         return "; ".join(output)
 

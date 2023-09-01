@@ -110,13 +110,10 @@ def _get_new_version(
     current_version: str = None,
     micro_release: bool = False,
 ):
-    if micro_release:
-        if current_version:
-            return _change_micro_version(current_version)
-        elif config_file:
-            return _change_micro_version(_fetch_current_version(config_file))
-        else:
-            return _fetch_default_calendar_release_version()
+    if micro_release and current_version:
+        return _change_micro_version(current_version)
+    elif micro_release and config_file:
+        return _change_micro_version(_fetch_current_version(config_file))
     else:
         return _fetch_default_calendar_release_version()
 
@@ -125,10 +122,7 @@ def _get_current_tag(git_command_name="get_tag"):
     global GIT_COMMANDS
     command = GIT_COMMANDS.get(git_command_name)
     out, err, ret = _run_shell_command(command)
-    if str(out):
-        return str(out).split("\n")[0]
-    else:
-        return None
+    return str(out).split("\n")[0] if str(out) else None
 
 
 def _update_release_version_for_sanic(
@@ -175,9 +169,7 @@ def _update_release_version_for_sanic(
     _, err, ret = _run_shell_command(command)
     if int(ret) != 0:
         print(
-            "Failed to Commit Version upgrade changes to Sanic: {}".format(
-                err.decode("utf-8")
-            )
+            f'Failed to Commit Version upgrade changes to Sanic: {err.decode("utf-8")}'
         )
         sys.exit(1)
 
@@ -228,7 +220,7 @@ def _tag_release(new_version, current_version, milestone, release_name, token):
         )
         out, error, ret = _run_shell_command(command=command)
         if int(ret) != 0:
-            print("Failed to execute the command: {}".format(command[0]))
+            print(f"Failed to execute the command: {command[0]}")
             sys.exit(1)
 
     change_log = _generate_markdown_document(
@@ -252,10 +244,7 @@ def release(args: Namespace):
     current_version = _fetch_current_version(args.config)
     if current_tag and current_version not in current_tag:
         print(
-            "Tag mismatch between what's in git and what was provided by "
-            "--current-version. Existing: {}, Give: {}".format(
-                current_tag, current_version
-            )
+            f"Tag mismatch between what's in git and what was provided by --current-version. Existing: {current_tag}, Give: {current_version}"
         )
         sys.exit(1)
     new_version = args.release_version or _get_new_version(

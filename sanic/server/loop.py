@@ -35,8 +35,7 @@ def try_use_uvloop() -> None:
         )
         return
 
-    uvloop_install_removed = str_to_bool(getenv("SANIC_NO_UVLOOP", "no"))
-    if uvloop_install_removed:
+    if uvloop_install_removed := str_to_bool(getenv("SANIC_NO_UVLOOP", "no")):
         error_logger.info(
             "You are requesting to run Sanic using uvloop, but the "
             "install-time 'SANIC_NO_UVLOOP' environment variable (used to "

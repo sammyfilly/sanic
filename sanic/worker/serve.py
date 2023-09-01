@@ -51,11 +51,7 @@ def worker_serve(
     try:
         from sanic import Sanic
 
-        if app_loader:
-            app = app_loader.load()
-        else:
-            app = Sanic.get_app(app_name)
-
+        app = app_loader.load() if app_loader else Sanic.get_app(app_name)
         app.refresh(passthru)
         app.setup_loop()
 
@@ -135,9 +131,8 @@ def worker_serve(
         )
     except Exception as e:
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        if monitor_publisher:
-            error_logger.exception(e)
-            multiplexer = WorkerMultiplexer(monitor_publisher, {})
-            multiplexer.terminate(True)
-        else:
+        if not monitor_publisher:
             raise e
+        error_logger.exception(e)
+        multiplexer = WorkerMultiplexer(monitor_publisher, {})
+        multiplexer.terminate(True)

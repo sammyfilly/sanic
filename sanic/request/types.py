@@ -216,10 +216,10 @@ class Request(Generic[sanic_type, ctx_type]):
 
         :return: the current :class:`sanic.request.Request`
         """
-        request = cls._current.get(None)
-        if not request:
+        if request := cls._current.get(None):
+            return request
+        else:
             raise ServerError("No current request")
-        return request
 
     @classmethod
     def generate_id(*_):
@@ -402,9 +402,7 @@ class Request(Generic[sanic_type, ctx_type]):
         :return: The defined URI template
         :rtype: Optional[str]
         """
-        if self.route:
-            return f"/{self.route.path}"
-        return None
+        return f"/{self.route.path}" if self.route else None
 
     @property
     def protocol(self):
@@ -907,8 +905,7 @@ class Request(Generic[sanic_type, ctx_type]):
         :return: the first matching host found, or empty string
         :rtype: str
         """
-        server_name = self.app.config.get("SERVER_NAME")
-        if server_name:
+        if server_name := self.app.config.get("SERVER_NAME"):
             return server_name.split("//", 1)[-1].split("/", 1)[0]
         return str(
             self.forwarded.get("host") or self.headers.getone("host", "")
@@ -950,10 +947,7 @@ class Request(Generic[sanic_type, ctx_type]):
         :return: representation of the requested query
         :rtype: str
         """
-        if self._parsed_url.query:
-            return self._parsed_url.query.decode("utf-8")
-        else:
-            return ""
+        return self._parsed_url.query.decode("utf-8") if self._parsed_url.query else ""
 
     @property
     def url(self) -> str:

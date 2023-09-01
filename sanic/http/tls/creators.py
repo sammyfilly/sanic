@@ -27,7 +27,7 @@ try:
     import trustme
 
     TRUSTME_INSTALLED = True
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     trustme = ModuleType("trustme")
     TRUSTME_INSTALLED = False
 
@@ -50,12 +50,11 @@ CIPHERS_TLS12 = [
 def _make_path(maybe_path: Union[Path, str], tmpdir: Optional[Path]) -> Path:
     if isinstance(maybe_path, Path):
         return maybe_path
-    else:
-        path = Path(maybe_path)
-        if not path.exists():
-            if not tmpdir:
-                raise RuntimeError("Reached an unknown state. No tmpdir.")
-            return tmpdir / maybe_path
+    path = Path(maybe_path)
+    if not path.exists():
+        if not tmpdir:
+            raise RuntimeError("Reached an unknown state. No tmpdir.")
+        return tmpdir / maybe_path
 
     return path
 
@@ -82,8 +81,7 @@ def get_ssl_context(
         app.config.LOCAL_TLS_KEY,
         app.config.LOCAL_TLS_CERT,
     )
-    context = creator.generate_cert(app.config.LOCALHOST)
-    return context
+    return creator.generate_cert(app.config.LOCALHOST)
 
 
 class CertCreator(ABC):

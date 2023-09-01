@@ -139,10 +139,9 @@ class SignalRouter(BaseRouter):
             is_reserved = event.split(".", 1)[0] in RESERVED_NAMESPACES
             if fail_not_found and (not is_reserved or self.allow_fail_builtin):
                 raise e
-            else:
-                if self.ctx.app.debug and self.ctx.app.state.verbosity >= 1:
-                    error_logger.warning(str(e))
-                return None
+            if self.ctx.app.debug and self.ctx.app.state.verbosity >= 1:
+                error_logger.warning(str(e))
+            return None
 
         events = [signal.ctx.event for signal in group]
         for signal_event in events:
@@ -264,16 +263,14 @@ class SignalRouter(BaseRouter):
             or parts[0].startswith("<")
             or parts[1].startswith("<")
         ):
-            raise InvalidSignal("Invalid signal event: %s" % event)
+            raise InvalidSignal(f"Invalid signal event: {event}")
 
         if (
             parts[0] in RESERVED_NAMESPACES
             and event not in RESERVED_NAMESPACES[parts[0]]
             and not (parts[2].startswith("<") and parts[2].endswith(">"))
         ):
-            raise InvalidSignal(
-                "Cannot declare reserved signal event: %s" % event
-            )
+            raise InvalidSignal(f"Cannot declare reserved signal event: {event}")
         return parts
 
     def _clean_trigger(self, trigger: str) -> str:

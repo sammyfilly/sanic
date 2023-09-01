@@ -27,10 +27,10 @@ async def index(request):
 async def foo3(request, ws):
     while True:
         data = "hello!"
-        print("Sending: " + data)
+        print(f"Sending: {data}")
         await ws.send(data)
         data = await ws.recv()
-        print("Received: " + data)
+        print(f"Received: {data}")
 
 
 app.blueprint(blueprint)

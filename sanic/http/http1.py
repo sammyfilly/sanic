@@ -407,10 +407,10 @@ class Http(Stream, metaclass=TouchUpMeta):
             await self._send(data)
             self.response_func = None
             self.stage = Stage.IDLE
-        else:
-            if end_stream:
-                raise ServerError("Response was smaller than content-length")
+        elif end_stream:
+            raise ServerError("Response was smaller than content-length")
 
+        else:
             await self._send(data)
         self.response_bytes_left = bytes_left
 

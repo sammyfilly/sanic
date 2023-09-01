@@ -100,9 +100,8 @@ def configure_socket(
     if server_settings.get("version") is HTTP.VERSION_3:
         return None
     sock = server_settings.get("sock")
-    unix = server_settings["unix"]
     backlog = server_settings["backlog"]
-    if unix:
+    if unix := server_settings["unix"]:
         sock = bind_unix_socket(unix, backlog=backlog)
         server_settings["unix"] = unix
     if sock is None:

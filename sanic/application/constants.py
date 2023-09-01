@@ -2,8 +2,8 @@ from enum import Enum, IntEnum, auto
 
 
 class StrEnum(str, Enum):  # no cov
-    def _generate_next_value_(name: str, *args) -> str:  # type: ignore
-        return name.lower()
+    def _generate_next_value_(self, *args) -> str:  # type: ignore
+        return self.lower()
 
     def __eq__(self, value: object) -> bool:
         value = str(value).upper()

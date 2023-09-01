@@ -67,9 +67,7 @@ class HttpProtocolMixin:
 
     @property
     def http(self):
-        if not hasattr(self, "_http"):
-            return None
-        return self._http
+        return None if not hasattr(self, "_http") else self._http
 
     @property
     def version(self):

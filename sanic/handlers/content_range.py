@@ -35,22 +35,16 @@ class ContentRangeHandler:
             raise HeaderNotFound("Range Header Not Found")
         unit, _, value = tuple(map(str.strip, _range.partition("=")))
         if unit != "bytes":
-            raise InvalidRangeType(
-                "%s is not a valid Range Type" % (unit,), self
-            )
+            raise InvalidRangeType(f"{unit} is not a valid Range Type", self)
         start_b, _, end_b = tuple(map(str.strip, value.partition("-")))
         try:
             self.start = int(start_b) if start_b else None
         except ValueError:
-            raise RangeNotSatisfiable(
-                "'%s' is invalid for Content Range" % (start_b,), self
-            )
+            raise RangeNotSatisfiable(f"'{start_b}' is invalid for Content Range", self)
         try:
             self.end = int(end_b) if end_b else None
         except ValueError:
-            raise RangeNotSatisfiable(
-                "'%s' is invalid for Content Range" % (end_b,), self
-            )
+            raise RangeNotSatisfiable(f"'{end_b}' is invalid for Content Range", self)
         if self.end is None:
             if self.start is None:
                 raise RangeNotSatisfiable(
@@ -59,20 +53,16 @@ class ContentRangeHandler:
             else:
                 # this case represents `Content-Range: bytes 5-`
                 self.end = self.total - 1
-        else:
-            if self.start is None:
-                # this case represents `Content-Range: bytes -5`
-                self.start = self.total - self.end
-                self.end = self.total - 1
+        elif self.start is None:
+            # this case represents `Content-Range: bytes -5`
+            self.start = self.total - self.end
+            self.end = self.total - 1
         if self.start >= self.end:
             raise RangeNotSatisfiable(
                 "Invalid for Content Range parameters", self
             )
         self.size = self.end - self.start + 1
-        self.headers = {
-            "Content-Range": "bytes %s-%s/%s"
-            % (self.start, self.end, self.total)
-        }
+        self.headers = {"Content-Range": f"bytes {self.start}-{self.end}/{self.total}"}
 
     def __bool__(self):
         return hasattr(self, "size") and self.size > 0

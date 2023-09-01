@@ -14,9 +14,8 @@ if sys.version_info < (3, 11, 0):
     class StrEnum(str, Enum):
         pass
 
-else:
-    if not TYPE_CHECKING:
-        from enum import StrEnum
+elif not TYPE_CHECKING:
+    from enum import StrEnum
 
 
 LOGGING_CONFIG_DEFAULTS: Dict[str, Any] = dict(  # no cov

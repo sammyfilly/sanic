@@ -173,7 +173,7 @@ class CertSimple(SanicSSLContext):
             subject = {k: v for item in cert["subject"] for k, v in item}
         self = create_context(certfile, keyfile, password)
         self.__class__ = cls
-        self.sanic = {**subject, **kw}
+        self.sanic = subject | kw
         return self
 
     def __init__(self, cert, key, **kw):

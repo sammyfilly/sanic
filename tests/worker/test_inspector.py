@@ -37,8 +37,7 @@ class FooInspector(Inspector):
 
 @pytest.fixture
 def publisher():
-    publisher = Mock()
-    return publisher
+    return Mock()
 
 
 @pytest.fixture

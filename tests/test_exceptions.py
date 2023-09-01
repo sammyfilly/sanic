@@ -26,10 +26,8 @@ from sanic.response import text
 def dl_to_dict(soup, dl_id):
     keys, values = [], []
     for dl in soup.find_all("dl", {"id": dl_id}):
-        for dt in dl.find_all("dt"):
-            keys.append(dt.text.split(":", 1)[0])
-        for dd in dl.find_all("dd"):
-            values.append(dd.text.strip())
+        keys.extend(dt.text.split(":", 1)[0] for dt in dl.find_all("dt"))
+        values.extend(dd.text.strip() for dd in dl.find_all("dd"))
     return dict(zip(keys, values))
 
 

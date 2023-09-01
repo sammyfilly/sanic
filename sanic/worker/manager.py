@@ -267,14 +267,12 @@ class WorkerManager:
     @property
     def processes(self):
         for worker in self.workers:
-            for process in worker.processes:
-                yield process
+            yield from worker.processes
 
     @property
     def transient_processes(self):
         for worker in self.transient.values():
-            for process in worker.processes:
-                yield process
+            yield from worker.processes
 
     def kill(self):
         for process in self.processes:

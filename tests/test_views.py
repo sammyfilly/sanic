@@ -50,9 +50,13 @@ def test_unexisting_methods(app):
 
 
 def test_argument_methods(app):
+
+
+
     class DummyView(HTTPMethodView):
         def get(self, request, my_param_here):
-            return text("I am get method with %s" % my_param_here)
+            return text(f"I am get method with {my_param_here}")
+
 
     app.add_route(DummyView.as_view(), "/<my_param_here>")
 

@@ -46,7 +46,7 @@ def parse_multipart_form(body, boundary):
         field_name = None
         line_index = 2
         line_end_index = 0
-        while not line_end_index == -1:
+        while line_end_index != -1:
             line_end_index = form_part.find(b"\r\n", line_index)
             form_line = form_part[line_index:line_end_index].decode("utf-8")
             line_index = line_end_index + 2
@@ -56,7 +56,7 @@ def parse_multipart_form(body, boundary):
 
             colon_index = form_line.index(":")
             idx = colon_index + 2
-            form_header_field = form_line[0:colon_index].lower()
+            form_header_field = form_line[:colon_index].lower()
             form_header_value, form_parameters = parse_content_header(
                 form_line[idx:]
             )

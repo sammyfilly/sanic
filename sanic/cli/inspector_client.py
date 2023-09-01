@@ -45,8 +45,7 @@ class InspectorClient:
         if action == "info":
             self.info()
             return
-        result = self.request(action, **kwargs).get("result")
-        if result:
+        if result := self.request(action, **kwargs).get("result"):
             out = (
                 dumps(result)
                 if isinstance(result, (list, dict))

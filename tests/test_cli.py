@@ -186,17 +186,7 @@ def test_host_port(cmd: Tuple[str, ...], expected: str, caplog):
     assert expected in lines
 
 
-@pytest.mark.parametrize(
-    "num,cmd",
-    (
-        (1, (f"--workers={1}",)),
-        (2, (f"--workers={2}",)),
-        (4, (f"--workers={4}",)),
-        (1, ("-w", "1")),
-        (2, ("-w", "2")),
-        (4, ("-w", "4")),
-    ),
-)
+@pytest.mark.parametrize("num,cmd", ((1, ('--workers=1', )), (2, ('--workers=2', )), (4, ('--workers=4', )), (1, ("-w", "1")), (2, ("-w", "2")), (4, ("-w", "4"))))
 def test_num_workers(num: int, cmd: Tuple[str, ...], caplog):
     command = ["fake.server.app", *cmd]
     lines = capture(command, caplog)

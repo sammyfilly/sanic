@@ -9,8 +9,8 @@ from sanic.models.handler_types import ListenerType, Sanic
 
 
 class ListenerEvent(str, Enum):
-    def _generate_next_value_(name: str, *args) -> str:  # type: ignore
-        return name.lower()
+    def _generate_next_value_(self, *args) -> str:  # type: ignore
+        return self.lower()
 
     BEFORE_SERVER_START = "server.init.before"
     AFTER_SERVER_START = "server.init.after"

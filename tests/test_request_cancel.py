@@ -32,7 +32,7 @@ async def test_request_cancel_when_connection_lost(app):
     # Wait for server and check if it's still serving the cancelled request
     await asyncio.sleep(1.0)
 
-    assert app.ctx.still_serving_cancelled_request is False
+    assert not app.ctx.still_serving_cancelled_request
 
 
 @pytest.mark.asyncio
@@ -69,4 +69,4 @@ async def test_stream_request_cancel_when_conn_lost(app):
     # Wait for server and check if it's still serving the cancelled request
     await asyncio.sleep(1.0)
 
-    assert app.ctx.still_serving_cancelled_request is False
+    assert not app.ctx.still_serving_cancelled_request

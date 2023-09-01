@@ -338,7 +338,7 @@ def test_route_strict_slashes_set_to_false_and_host_is_a_list(app):
     def get_handler(request):
         return text("OK")
 
-    request, response = test_client.get("http://" + site1 + "/get")
+    request, response = test_client.get(f"http://{site1}/get")
     assert response.text == "OK"
 
     app.router.finalized = False
@@ -347,7 +347,7 @@ def test_route_strict_slashes_set_to_false_and_host_is_a_list(app):
     def post_handler(request):
         return text("OK")
 
-    request, response = test_client.post("http://" + site1 + "/post")
+    request, response = test_client.post(f"http://{site1}/post")
     assert response.text == "OK"
 
     app.router.finalized = False
@@ -356,7 +356,7 @@ def test_route_strict_slashes_set_to_false_and_host_is_a_list(app):
     def put_handler(request):
         return text("OK")
 
-    request, response = test_client.put("http://" + site1 + "/put")
+    request, response = test_client.put(f"http://{site1}/put")
     assert response.text == "OK"
 
     app.router.finalized = False
@@ -365,7 +365,7 @@ def test_route_strict_slashes_set_to_false_and_host_is_a_list(app):
     def delete_handler(request):
         return text("OK")
 
-    request, response = test_client.delete("http://" + site1 + "/delete")
+    request, response = test_client.delete(f"http://{site1}/delete")
     assert response.text == "OK"
 
 
@@ -1064,7 +1064,7 @@ def test_unicode_routes(app):
 
     @app.route("/overload/<param>", methods=["GET"], unquote=True)
     async def handler2(request, param):
-        return text("OK2 " + param)
+        return text(f"OK2 {param}")
 
     request, response = app.test_client.get("/overload/你好")
     assert response.text == "OK2 你好"

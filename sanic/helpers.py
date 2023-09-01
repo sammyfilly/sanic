@@ -132,7 +132,7 @@ def remove_entity_headers(headers, allowed=("content-location", "expires")):
 
     returns the headers without the entity headers
     """
-    allowed = set([h.lower() for h in allowed])
+    allowed = {h.lower() for h in allowed}
     headers = {
         header: value
         for header, value in headers.items()
@@ -154,9 +154,7 @@ def import_string(module_name, package=None):
     module, klass = module_name.rsplit(".", 1)
     module = import_module(module, package=package)
     obj = getattr(module, klass)
-    if ismodule(obj):
-        return obj
-    return obj()
+    return obj if ismodule(obj) else obj()
 
 
 def is_atty() -> bool:

@@ -247,7 +247,7 @@ def _serve_http_1(
         start_shutdown: float = 0
         while connections and (start_shutdown < graceful):
             loop.run_until_complete(asyncio.sleep(0.1))
-            start_shutdown = start_shutdown + 0.1
+            start_shutdown += 0.1
 
         app.shutdown_tasks(graceful - start_shutdown)
 

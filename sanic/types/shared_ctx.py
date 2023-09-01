@@ -20,10 +20,7 @@ class SharedContext(SimpleNamespace):
             )
         if not os.environ.get("SANIC_WORKER_NAME"):
             to_check: Iterable[Any]
-            if not isinstance(value, (tuple, frozenset)):
-                to_check = [value]
-            else:
-                to_check = value
+            to_check = [value] if not isinstance(value, (tuple, frozenset)) else value
             for item in to_check:
                 self._check(name, item)
         super().__setattr__(name, value)

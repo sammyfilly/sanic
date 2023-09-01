@@ -45,8 +45,8 @@ else:
 
 
 class UpperStrEnum(StrEnum):
-    def _generate_next_value_(name, start, count, last_values):
-        return name.upper()
+    def _generate_next_value_(self, start, count, last_values):
+        return self.upper()
 
     def __eq__(self, value: object) -> bool:
         value = str(value).upper()

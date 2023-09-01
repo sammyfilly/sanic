@@ -229,8 +229,7 @@ class ASGIApp:
                     "headers": response.processed_headers,
                 }
             )
-            response_body = getattr(response, "body", None)
-            if response_body:
+            if response_body := getattr(response, "body", None):
                 data = response_body + data if data else response_body
         await self.transport.send(
             {

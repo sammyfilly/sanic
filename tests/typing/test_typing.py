@@ -25,8 +25,7 @@ def run_check(path_location: str) -> str:
         stderr=subprocess.PIPE,
         universal_newlines=True,
     )
-    output = process.stdout + process.stderr
-    return output
+    return process.stdout + process.stderr
 
 
 @pytest.mark.parametrize(
